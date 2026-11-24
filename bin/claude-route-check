@@ -1,0 +1,22 @@
+#!/bin/bash
+# Read-only diagnostics for the Mac launchers. Never dump settings or tokens.
+set -u
+bad=0
+ok() { printf 'OK: %s\n' "$1"; }
+fail() { printf 'FAIL: %s\n' "$1"; bad=1; }
+proxy=http://127.0.0.1:18787
+for tool in claude claude-web claude-web-vps; do
+  command -v "$tool" >/dev/null && ok "$tool в PATH" || fail "$tool не найден; см. SETUP.ru.md, разделы 2 и 5"
+done
+settings="$HOME/.claude/settings.json"
+for key in HTTPS_PROXY HTTP_PROXY; do
+  value=$(/usr/bin/plutil -extract "env.$key" raw -o - "$settings" 2>/dev/null) || value=''
+  [[ "$value" == "$proxy" ]] && ok "$key в settings.json" || fail "$key отсутствует или изменён: после чистой установки восстановите examples/settings.json (не затирайте свои настройки)"
+done
+[[ -x '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome' ]] && ok 'Chrome на Mac' || fail 'Chrome не установлен в /Applications (нужен для claude-web)'
+launchctl print "gui/$(id -u)/local.claude.proxy" >/dev/null 2>&1 && ok 'LaunchAgent зарегистрирован' || fail 'Туннель не зарегистрирован; выполните bootstrap из инструкции'
+status=$(curl --noproxy '' --proxy "$proxy" -sS -o /dev/null --connect-timeout 4 --max-time 12 -w '%{http_connect} %{http_code}' https://api.anthropic.com/v1/models) || status='unreachable'
+[[ "$status" == '200 401' ]] && ok 'CONNECT 200 → Anthropic 401 без учётных данных' || fail "Маршрут API: $status (ожидается 200 401); проверьте SSH и Tinyproxy"
+ssh -a -o BatchMode=yes -o ConnectTimeout=6 my-germany-server 'systemctl is-enabled --quiet tinyproxy && systemctl is-active --quiet tinyproxy' && ok 'SSH без запроса пароля; Tinyproxy работает и включён при загрузке' || fail 'SSH/автозапуск Tinyproxy недоступен'
+ssh -a -o BatchMode=yes -o ConnectTimeout=6 my-germany-server 'systemctl is-enabled --quiet chrome-vps && test -s /var/lib/chrome-view/.vnc/passwd' && ok 'VPS Chrome: автозапуск настроен, пароль задан' || fail 'VPS Chrome: проверьте установку, первый запуск и systemctl enable chrome-vps'
+exit "$bad"

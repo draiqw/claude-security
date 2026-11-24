@@ -56,7 +56,7 @@ mkdir -p ~/Projects ~/.local/bin
 cd ~/Projects
 git clone https://github.com/draiqw/claude-security.git
 cd claude-security
-install -m 755 bin/claude-web bin/claude-web-vps ~/.local/bin/
+install -m 755 bin/claude-web bin/claude-web-vps bin/claude-route-check ~/.local/bin/
 ```
 
 Если репозиторий уже скачан, вместо повторного `clone` перейдите в него. Проверьте `command -v claude-web`. Если ничего не вывелось, добавьте **один раз** в `~/.zshrc` строку `export PATH="$HOME/.local/bin:$PATH"`, затем `source ~/.zshrc`. В новой вкладке Терминала команда должна находиться. Далее считаем, что репозиторий лежит в `~/Projects/claude-security`.

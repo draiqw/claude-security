@@ -10,6 +10,8 @@
 | `claude-web-vps` | Chrome на Linux, Mac показывает экран | Linux-браузер и сетевой адрес VPS | VPS, /var/lib/chrome-view/profile |
 | `claude` | CLI и его Read/Edit/Bash на Mac | API-запросы через настроенный CONNECT-прокси | CLI-состояние на Mac, независимо от Chrome |
 
+**После перезагрузки или переустановки:** [проверки, автозапуск и восстановление](docs/RECOVERY.ru.md). Быстрая диагностика на Mac: `claude-route-check`.
+
 ### 1. Общие условия
 
 Примеры используют SSH-алиас `my-germany-server` из вашего ~/.ssh/config. Нужен вход по SSH-ключу в пакетном режиме. Для установки системных файлов и приведённого VPS-лаунчера нужен администратор сервера; сам Chrome работает **не под root**. Не копируйте приватные ключи на сервер. Серверная часть рассчитана на Ubuntu 24.04 x86_64. На Mac нужны Google Chrome (только для локального режима), OpenSSH и Screen Sharing. Скопируйте оба файла из bin/ в ~/.local/bin/ и добавьте этот каталог в PATH.
@@ -23,7 +25,7 @@
 
 ```sh
 mkdir -p ~/Library/LaunchAgents ~/.local/bin
-install -m 755 bin/claude-web bin/claude-web-vps ~/.local/bin/
+install -m 755 bin/claude-web bin/claude-web-vps bin/claude-route-check ~/.local/bin/
 install -m 600 macos/local.claude.proxy.plist ~/Library/LaunchAgents/
 launchctl bootstrap "gui/$(id -u)" ~/Library/LaunchAgents/local.claude.proxy.plist
 curl --noproxy '' -x http://127.0.0.1:18787 https://ipinfo.io/country

@@ -1,6 +1,7 @@
 [Unit]
 Description=Private Chrome desktop over SSH
 After=network.target
+ConditionPathExists=/var/lib/chrome-view/.vnc/passwd
 [Service]
 Type=simple
 User=chrome-view
@@ -13,3 +14,7 @@ UMask=0077
 ExecStart=/usr/bin/dbus-run-session -- /usr/local/libexec/chrome-vps-session
 KillMode=control-group
 TimeoutStopSec=15
+Restart=on-failure
+RestartSec=5
+[Install]
+WantedBy=multi-user.target

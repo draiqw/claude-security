@@ -13,7 +13,7 @@ if ! ssh "${ssh_opts[@]}" "$host" 'test -f /var/lib/chrome-view/.vnc/password-se
   echo 'Задай пароль VNC (8 символов), затем введи его в Screen Sharing.'
   ssh "${ssh_opts[@]}" -t "$host" 'runuser -u chrome-view -- tigervncpasswd /var/lib/chrome-view/.vnc/passwd && touch /var/lib/chrome-view/.vnc/password-set'
 fi
-ssh "${ssh_opts[@]}" "$host" 'systemctl start chrome-vps.service; for n in $(seq 1 40); do test ! -S /run/chrome-view/view.sock || exit 0; sleep .25; done; exit 1'
+ssh "${ssh_opts[@]}" "$host" 'systemctl enable --now chrome-vps.service && for n in $(seq 1 40); do test ! -S /run/chrome-view/view.sock || exit 0; sleep .25; done; exit 1'
 if ! ssh "${ssh_opts[@]}" -S "$ctl" -O check "$host" 2>/dev/null; then
   ssh "${ssh_opts[@]}" -M -S "$ctl" -fNT -o ExitOnForwardFailure=yes -o ServerAliveInterval=30 -o ServerAliveCountMax=3 -L "127.0.0.1:$port:/run/chrome-view/view.sock" "$host"
 fi
