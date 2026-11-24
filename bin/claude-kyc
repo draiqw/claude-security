@@ -1,0 +1,8 @@
+#!/bin/bash
+set -eu
+org=${1:-${CLAUDE_ORG_ID:-}}
+if [[ ! $org =~ ^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$ ]]; then
+  echo 'Usage: claude-kyc ORGANIZATION_UUID (or set CLAUDE_ORG_ID)' >&2; exit 2
+fi
+/usr/bin/nc -z -w 2 127.0.0.1 18787 || { echo 'SSH tunnel unavailable'; exit 1; }
+exec /usr/bin/open -na 'Google Chrome' --args "--user-data-dir=$HOME/Library/Application Support/Chrome-Germany" --profile-directory=Default --proxy-server=http://127.0.0.1:18787 --disable-extensions --disable-sync "--app=https://claude.ai/api/organizations/$org/kyc_status"

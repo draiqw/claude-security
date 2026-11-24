@@ -62,3 +62,14 @@ systemctl daemon-reload
 - Не публикуйте ~/.claude.json, реальные настройки MCP с секретами, cookies, сырые дампы трафика, транскрипты, пароли VNC, ключи и архивы конфигурации. В репозитории только скрипты и обезличенный пример.
 
 Документация Anthropic: [сеть и прокси](https://code.claude.com/docs/en/network-config), [использование данных](https://code.claude.com/docs/en/data-usage), [переменные окружения](https://code.claude.com/docs/en/env-vars), [Remote Control](https://code.claude.com/docs/en/remote-control).
+
+### Иконка Claude Web на Mac и просмотр статуса организации
+
+Установите `claude-web` и туннель как описано выше. Из корня клона выполните:
+
+```sh
+osacompile -o "$HOME/Desktop/Claude Web.app" macos/claude-launcher.applescript
+install -m 755 bin/claude-kyc ~/.local/bin/
+```
+
+Двойной клик по приложению откроет существующий Chrome-Germany без Терминала. Для просмотра статуса своей организации в том же профиле: `claude-kyc ВАШ_UUID`. Это внутренний URL веб-интерфейса, не стабильный публичный API; он требует действующей браузерной сессии с доступом к организации. Не публикуйте UUID, ответы с идентификаторами проверки, токены или cookies.
