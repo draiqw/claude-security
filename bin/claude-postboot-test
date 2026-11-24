@@ -1,0 +1,16 @@
+#!/bin/bash
+set -u
+umask 077
+base="$HOME/Library/Logs/claude-postboot"
+boot=$(/usr/sbin/sysctl -n kern.bootsessionuuid)
+read -r previous < "$base/before" || exit 1
+[[ "$boot" != "$previous" && ! -f "$base/passed" ]] || exit 0
+export PATH="$HOME/.local/bin:/opt/homebrew/bin:/usr/bin:/bin:/usr/sbin:/sbin"
+exec >"$base/report.txt" 2>&1
+for i in {1..12}; do
+ date
+ if claude-route-check && claude --version; then echo 'PASS: after a different macOS boot'; touch "$base/passed"; exit 0; fi
+ sleep 10
+done
+echo 'FAIL: check VPN, Keychain and SSH; run claude-route-check'
+exit 1

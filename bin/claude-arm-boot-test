@@ -1,0 +1,20 @@
+#!/bin/bash
+# Arm diagnostics for the next real macOS boot; never reboot the machine.
+set -eu
+umask 077
+base="$HOME/Library/Logs/claude-postboot"
+runner="$HOME/.local/bin/claude-postboot-test"
+label=local.claude.boot-test
+plist="$HOME/Library/LaunchAgents/$label.plist"
+test -x "$runner" && test -x "$HOME/.local/bin/claude-route-check" || { echo 'Install the test runner and claude-route-check first.' >&2; exit 1; }
+mkdir -p "$base" "$HOME/Library/LaunchAgents"
+launchctl bootout "gui/$(id -u)/$label" 2>/dev/null || true
+/usr/sbin/sysctl -n kern.bootsessionuuid > "$base/before"
+rm -f "$base/passed" "$base/report.txt"
+/usr/bin/plutil -create xml1 "$plist"
+/usr/bin/plutil -insert Label -string "$label" "$plist"
+/usr/bin/plutil -insert ProgramArguments -array "$plist"
+/usr/bin/plutil -insert ProgramArguments.0 -string "$runner" "$plist"
+/usr/bin/plutil -insert RunAtLoad -bool true "$plist"
+launchctl bootstrap "gui/$(id -u)" "$plist"
+printf 'Armed. After restarting and logging in, see %s/report.txt\n' "$base"

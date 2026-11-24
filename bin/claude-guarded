@@ -1,0 +1,37 @@
+#!/bin/bash
+# Native CLI stays untouched. Preflight once before invoking it, in the original cwd.
+set -eu
+proxy=http://127.0.0.1:18787
+label="gui/$(id -u)/local.claude.proxy"
+plist="$HOME/Library/LaunchAgents/local.claude.proxy.plist"
+settings="${CLAUDE_CONFIG_DIR:-$HOME/.claude}/settings.json"
+fail() { printf 'Claude не запущен: %s\n' "$*" >&2; exit 1; }
+cli="$HOME/.local/bin/claude"
+[[ -x "$cli" ]] || fail 'нет нативного CLI. См. инструкцию по переустановке.'
+for name in HTTPS_PROXY HTTP_PROXY; do
+  value=$(/usr/bin/plutil -extract "env.$name" raw -o - "$settings" 2>/dev/null) || value=''
+  [[ "$value" == "$proxy" ]] || fail "проверьте env.$name в $settings (ожидается $proxy)."
+done
+probe() {
+  local pid status
+  pid=$(launchctl print "$label" 2>/dev/null | awk '$1=="pid" && $2=="=" {print $3;exit}')
+  [[ "$pid" =~ ^[0-9]+$ ]] && /usr/sbin/lsof -nP -a -p "$pid" -iTCP@127.0.0.1:18787 -sTCP:LISTEN >/dev/null 2>&1 || return 1
+  status=$(/usr/bin/curl -q --noproxy '' --proxy "$proxy" --connect-timeout 3 --max-time 5 -s -o /dev/null -w '%{http_connect} %{http_code}' https://api.anthropic.com/v1/models) || return 1
+  [[ "$status" == '200 401' ]]
+}
+if ! probe; then
+  printf 'Проверяю и восстанавливаю SSH-туннель…\n' >&2
+  [[ -f "$plist" ]] || fail "нет $plist; восстановите LaunchAgent из репозитория."
+  if ! launchctl print "$label" >/dev/null 2>&1; then
+    launchctl bootstrap "gui/$(id -u)" "$plist" || launchctl print "$label" >/dev/null 2>&1 || fail 'не удалось зарегистрировать LaunchAgent.'
+  fi
+  # Never kill a functioning SSH process during an API outage.
+  launchctl kickstart "$label" >/dev/null 2>&1 || :
+  until probe; do
+    (( SECONDS < 65 )) || fail 'туннель или API недоступны. Проверьте VPN, SSH-ключ и claude-route-check.'
+    sleep 2
+  done
+fi
+export HTTPS_PROXY="$proxy" HTTP_PROXY="$proxy" https_proxy="$proxy" http_proxy="$proxy"
+export NO_PROXY='localhost,127.0.0.1,::1' no_proxy='localhost,127.0.0.1,::1'
+exec "$cli" "$@"
