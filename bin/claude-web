@@ -1,0 +1,6 @@
+#!/bin/sh
+set -eu
+profile="$HOME/Library/Application Support/Chrome-Germany"
+proxy=http://127.0.0.1:18787
+/usr/bin/nc -z -w 2 127.0.0.1 18787 || { printf '%s\n' 'SSH-туннель не доступен; Chrome не открыт.' >&2; exit 1; }
+exec /usr/bin/open -na 'Google Chrome' --args "--user-data-dir=$profile" --profile-directory=Default "--proxy-server=$proxy" --disable-extensions --disable-sync --app=https://claude.ai/

@@ -1,0 +1,13 @@
+#!/bin/bash
+set -euo pipefail
+umask 077
+export DISPLAY=:47 XAUTHORITY="$XDG_RUNTIME_DIR/Xauthority"
+: > "$XAUTHORITY"
+xauth -f "$XAUTHORITY" add "$DISPLAY" . "$(mcookie)"
+Xtigervnc "$DISPLAY" -auth "$XAUTHORITY" -nolisten tcp -rfbport -1 -rfbunixpath "$XDG_RUNTIME_DIR/view.sock" -rfbunixmode 0600 -SecurityTypes VncAuth -PasswordFile "$HOME/.vnc/passwd" -geometry 1920x1080 -depth 24 -desktop Chrome-Germany &
+xpid=$!
+trap 'kill "$xpid" 2>/dev/null || true' EXIT
+for i in {1..50}; do xdpyinfo >/dev/null 2>&1 && break; sleep .2; done
+xdpyinfo >/dev/null
+openbox >/dev/null 2>&1 &
+google-chrome-stable --no-first-run --no-default-browser-check --disable-dev-shm-usage --user-data-dir="$HOME/profile" https://claude.ai/

@@ -1,0 +1,16 @@
+{
+  "env": {
+    "HTTPS_PROXY": "http://127.0.0.1:18787",
+    "HTTP_PROXY": "http://127.0.0.1:18787",
+    "NO_PROXY": "localhost,127.0.0.1,::1",
+    "DISABLE_TELEMETRY": "1",
+    "DISABLE_ERROR_REPORTING": "1"
+  },
+  "enableArtifact": false,
+  "deniedMcpServers": [
+    {
+      "serverName": "claude.ai Claude Docs"
+    }
+  ],
+  "remoteControlAtStartup": false
+}

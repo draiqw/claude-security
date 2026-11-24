@@ -1,0 +1,10 @@
+.DS_Store
+.env*
+*.pem
+*.key
+*.zip
+*.tar*
+.claude/
+.claude.json
+profile/
+.vnc/

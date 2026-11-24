@@ -1,0 +1,15 @@
+[Unit]
+Description=Private Chrome desktop over SSH
+After=network.target
+[Service]
+Type=simple
+User=chrome-view
+Group=chrome-view
+Environment=HOME=/var/lib/chrome-view
+Environment=XDG_RUNTIME_DIR=/run/chrome-view
+RuntimeDirectory=chrome-view
+RuntimeDirectoryMode=0700
+UMask=0077
+ExecStart=/usr/bin/dbus-run-session -- /usr/local/libexec/chrome-vps-session
+KillMode=control-group
+TimeoutStopSec=15
